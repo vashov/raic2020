@@ -1,3 +1,5 @@
+using System;
+
 namespace Aicup2020.Model
 {
     public struct Vec2Int
@@ -20,6 +22,11 @@ namespace Aicup2020.Model
         {
             writer.Write(X);
             writer.Write(Y);
+        }
+
+        public double RangeTo(Vec2Int p2)
+        {
+            return Math.Abs(Math.Sqrt(Math.Pow(p2.X - this.X, 2) + Math.Pow(p2.Y - this.Y, 2)));
         }
     }
 }

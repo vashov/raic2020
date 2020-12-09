@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace Aicup2020.Model
 {
     public struct Entity
@@ -8,6 +10,9 @@ namespace Aicup2020.Model
         public Model.Vec2Int Position { get; set; }
         public int Health { get; set; }
         public bool Active { get; set; }
+
+        public EntityProperties Properties => WorldConfig.EntityProperties[EntityType];
+
         public Entity(int id, int? playerId, Model.EntityType entityType, Model.Vec2Int position, int health, bool active)
         {
             this.Id = id;
@@ -83,6 +88,24 @@ namespace Aicup2020.Model
             Position.WriteTo(writer);
             writer.Write(Health);
             writer.Write(Active);
+        }
+
+        public bool IsEnemy()
+        {
+            int? playerId = PlayerId;
+            return playerId != WorldConfig.MyId && WorldConfig.EnemyPlayers.Any(p => p.Id == playerId);
+        }
+
+        public bool IsWarrior() => EntityType == EntityType.MeleeUnit || EntityType == EntityType.RangedUnit;
+
+        public bool CanAttack(Entity enemy)
+        {
+            EntityProperties prop = WorldConfig.EntityProperties[EntityType];
+
+            if (prop.Attack == null)
+                return false;
+
+            return prop.Attack.Value.AttackRange >= Position.RangeTo(enemy.Position);
         }
     }
 }
