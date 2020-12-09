@@ -11,6 +11,16 @@ namespace Aicup2020.Model
         public int Health { get; set; }
         public bool Active { get; set; }
 
+        public bool IsEnemyEntity => PlayerId != WorldConfig.MyId && PlayerId != null;
+
+        public bool IsMyEntity => PlayerId == WorldConfig.MyId;
+
+        public bool IsResource => EntityType == EntityType.Resource;
+
+        public bool IsWarrior => EntityType == EntityType.MeleeUnit || EntityType == EntityType.RangedUnit;
+
+        public bool IsBuilderUnit => EntityType == EntityType.BuilderUnit;
+
         public EntityProperties Properties => WorldConfig.EntityProperties[EntityType];
 
         public Entity(int id, int? playerId, Model.EntityType entityType, Model.Vec2Int position, int health, bool active)
@@ -89,14 +99,6 @@ namespace Aicup2020.Model
             writer.Write(Health);
             writer.Write(Active);
         }
-
-        public bool IsEnemy()
-        {
-            int? playerId = PlayerId;
-            return playerId != WorldConfig.MyId && WorldConfig.EnemyPlayers.Any(p => p.Id == playerId);
-        }
-
-        public bool IsWarrior() => EntityType == EntityType.MeleeUnit || EntityType == EntityType.RangedUnit;
 
         public bool CanAttack(Entity enemy)
         {
