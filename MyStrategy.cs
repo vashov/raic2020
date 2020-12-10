@@ -15,7 +15,9 @@ namespace Aicup2020
 
             var actions = new Dictionary<int, Model.EntityAction>(entityCount);
 
-            BuilderManager.ManageUnits(playerView, actions);
+            BuilderBaseManager.Manage(playerView, actions);
+
+            BuilderUnitManager.Manage(playerView, actions);
 
             WarriorManager.ManageUnits(playerView, actions);
 

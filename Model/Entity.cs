@@ -18,8 +18,11 @@ namespace Aicup2020.Model
         public bool IsResource => EntityType == EntityType.Resource;
 
         public bool IsWarrior => EntityType == EntityType.MeleeUnit || EntityType == EntityType.RangedUnit;
+        public bool IsMeleeUnit => EntityType == EntityType.MeleeUnit;
+        public bool IsRangedUnit => EntityType == EntityType.RangedUnit;
 
         public bool IsBuilderUnit => EntityType == EntityType.BuilderUnit;
+        public bool IsBuilderBase => EntityType == EntityType.BuilderBase;
 
         public EntityProperties Properties => WorldConfig.EntityProperties[EntityType];
 

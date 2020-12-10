@@ -4,17 +4,19 @@ using System.Linq;
 
 namespace aicup2020.Managers
 {
-    public static class BuilderManager
+    public static class BuilderUnitManager
     {
-        public static void ManageUnits(PlayerView playerView, Dictionary<int, EntityAction> actions)
+        public static void Manage(PlayerView playerView, Dictionary<int, EntityAction> actions)
         {
             IEnumerable<Entity> myBuilders = playerView.Entities.Where(e => e.IsMyEntity && e.IsBuilderUnit);
 
             IEnumerable<Entity> resources = playerView.Entities.Where(e => e.IsResource);
 
+            var resourcesUsedIds = new List<int>();
+
             foreach (Entity builder in myBuilders)
             {
-                var resourceRanges = resources.Select(r
+                var resourceRanges = resources.Where(r => !resourcesUsedIds.Contains(r.Id)).Select(r
                     => new { r.Id, Range = r.Position.RangeTo(builder.Position) });
 
                 if (!resourceRanges.Any())
@@ -23,6 +25,8 @@ namespace aicup2020.Managers
                 double minRange = resourceRanges.Min(r => r.Range);
                 int resourceId = resourceRanges.First(r => r.Range == minRange).Id;
                 Entity closestResource = resources.First(r => r.Id == resourceId);
+
+                resourcesUsedIds.Add(resourceId);
 
                 if (builder.CanAttack(closestResource))
                 {
