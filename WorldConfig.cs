@@ -20,13 +20,15 @@ namespace Aicup2020
             ResourcesUsedInRound = 0;
 
             MyId = playerView.MyId;
+
+            // Get updated resources and score.
             MyPlayer = playerView.Players.First(p => p.Id == MyId);
+            EnemyPlayers = playerView.Players.Where(p => p.Id != MyId).ToList();
 
             if (IsInitialized)
                 return;
             
             EntityProperties = playerView.EntityProperties;
-            EnemyPlayers = playerView.Players.Where(p => p.Id != MyId).ToList();
 
             IsInitialized = true;
         }
