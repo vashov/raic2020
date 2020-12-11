@@ -19,6 +19,8 @@ namespace Aicup2020
 
             BuilderUnitManager.Manage(playerView, actions);
 
+            RangedBaseManager.Manage(playerView, actions);
+
             WarriorManager.ManageUnits(playerView, actions);
 
             return new Action(actions);

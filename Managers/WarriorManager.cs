@@ -1,4 +1,5 @@
-﻿using Aicup2020.Model;
+﻿using Aicup2020;
+using Aicup2020.Model;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,30 +11,45 @@ namespace aicup2020.Managers
         {
             IEnumerable<Entity> warriors = playerView.Entities.Where(e => e.IsMyEntity && e.IsWarrior);
 
-            IOrderedEnumerable<Entity> enemies = playerView.Entities
-                .Where(e => e.IsEnemyEntity).OrderBy(e => e.PlayerId).ThenBy(e => e.Id);
+            IEnumerable<Entity> enemiesInMyBase = playerView.Entities.Where(e => e.IsEnemyEntity && e.InMyBase());
 
             //IOrderedEnumerable<Entity> enemyBuildings = playerView.Entities
             //    .Where(e => e.IsEnemy()).OrderBy(e => e.PlayerId).ThenBy(e => e.Id);
 
             foreach (Entity warrior in warriors)
             {
-                if (!enemies.Any())
-                    break;
-
-                var enemy = enemies.First();
-
-                if (warrior.CanAttack(enemy))
+                if (enemiesInMyBase.Any())
                 {
-                    var attackAction = new AttackAction { Target = enemy.Id };
+                    var enemiesRanges = enemiesInMyBase.Select(r => new { r.Id, Range = r.Position.RangeTo(warrior.Position) });
 
-                    actions.Add(warrior.Id, new EntityAction() { AttackAction = attackAction });
+                    double minRange = enemiesRanges.Min(r => r.Range);
+                    int enemyId = enemiesRanges.First(r => r.Range == minRange).Id;
+                    Entity closestEnemy = enemiesInMyBase.First(r => r.Id == enemyId);
+
+                    if (warrior.CanAttack(closestEnemy))
+                    {
+                        var attackAction = new AttackAction { Target = closestEnemy.Id };
+
+                        actions.Add(warrior.Id, new EntityAction() { AttackAction = attackAction });
+
+                        continue;
+                    }
+
+                    var moveAction = new MoveAction { Target = closestEnemy.Position };
+                    actions.Add(warrior.Id, new EntityAction() { MoveAction = moveAction });
 
                     continue;
                 }
+                else
+                {
+                    //int halfMap = WorldConfig.MapSize / 2;
 
-                var moveAction = new MoveAction { Target = enemy.Position };
-                actions.Add(warrior.Id, new EntityAction() { MoveAction = moveAction });
+                    Vec2Int pointForCenter = new Vec2Int { X = 20, Y = 20 };
+
+                    var moveAction = new MoveAction { Target = pointForCenter };
+                    actions.Add(warrior.Id, new EntityAction() { MoveAction = moveAction });
+                }
+                
             }
         }
     }

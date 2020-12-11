@@ -20,6 +20,8 @@ namespace Aicup2020.Model
         public bool IsWarrior => EntityType == EntityType.MeleeUnit || EntityType == EntityType.RangedUnit;
         public bool IsMeleeUnit => EntityType == EntityType.MeleeUnit;
         public bool IsRangedUnit => EntityType == EntityType.RangedUnit;
+        public bool IsRangedBase => EntityType == EntityType.RangedBase;
+
 
         public bool IsBuilderUnit => EntityType == EntityType.BuilderUnit;
         public bool IsBuilderBase => EntityType == EntityType.BuilderBase;
@@ -111,6 +113,12 @@ namespace Aicup2020.Model
                 return false;
 
             return prop.Attack.Value.AttackRange >= Position.RangeTo(enemy.Position);
+        }
+
+        public bool InMyBase()
+        {
+            decimal halfMap = WorldConfig.MapSize / (decimal)2;
+            return Position.X <= halfMap && Position.Y <= halfMap;
         }
     }
 }

@@ -28,5 +28,9 @@ namespace Aicup2020.Model
         {
             return Math.Abs(Math.Sqrt(Math.Pow(p2.X - this.X, 2) + Math.Pow(p2.Y - this.Y, 2)));
         }
+
+        public static bool operator ==(Vec2Int v1, Vec2Int v2) => v1.X == v2.X && v1.Y == v2.Y;
+
+        public static bool operator !=(Vec2Int v1, Vec2Int v2) => v1.X != v2.X || v1.Y != v2.Y;
     }
 }

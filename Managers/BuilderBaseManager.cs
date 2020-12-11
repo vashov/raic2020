@@ -9,7 +9,19 @@ namespace aicup2020.Managers
     {
         public static void Manage(PlayerView playerView, Dictionary<int, EntityAction> actions)
         {
-            IEnumerable<Entity> myBuilderBases = playerView.Entities.Where(e => e.IsMyEntity && e.IsBuilderBase);
+            IEnumerable<Entity> myBuilderBases = WorldConfig.MyEntites.Where(e => e.IsBuilderBase);
+
+            int countBuilders = WorldConfig.MyEntites.Where(e => e.IsBuilderUnit).Count();
+            if (countBuilders >= 5)
+            {
+                foreach (var builderBase in myBuilderBases)
+                {
+                    actions.Add(builderBase.Id, new EntityAction());
+                }
+
+                return;
+            }
+
 
             int costOfBuilderUnit = WorldConfig.EntityProperties[EntityType.BuilderUnit].Cost;
 
