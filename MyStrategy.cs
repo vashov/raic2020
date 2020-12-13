@@ -15,6 +15,7 @@ namespace Aicup2020
 
             var actions = new Dictionary<int, Model.EntityAction>(entityCount);
 
+            var l = WorldConfig.MyEntites.ToList();
             BuilderBaseManager.Manage(playerView, actions);
 
             BuilderUnitManager.Manage(playerView, actions);

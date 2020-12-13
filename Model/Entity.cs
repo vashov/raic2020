@@ -21,7 +21,31 @@ namespace Aicup2020.Model
         public bool IsMeleeUnit => EntityType == EntityType.MeleeUnit;
         public bool IsRangedUnit => EntityType == EntityType.RangedUnit;
         public bool IsRangedBase => EntityType == EntityType.RangedBase;
+        public bool IsMeleeBase => EntityType == EntityType.MeleeBase;
 
+        public bool IsHouse => EntityType == EntityType.House;
+        public bool IsTurret => EntityType == EntityType.Turret;
+
+        public bool RepairAllowed => IsHouse || IsTurret || IsBuilderBase || IsRangedBase || IsMeleeBase;
+
+        public int RepairPriority
+        {
+            get
+            {
+                return EntityType switch
+                {
+                    EntityType.House => 1,
+                    EntityType.BuilderBase => 2,
+                    EntityType.MeleeBase => 2,
+                    EntityType.RangedBase => 2,
+                    EntityType.Turret => 3,
+                    EntityType.BuilderUnit => 4,
+                    EntityType.MeleeUnit => 4,
+                    EntityType.RangedUnit => 4,
+                    _ => 10
+                };
+            }
+        }
 
         public bool IsBuilderUnit => EntityType == EntityType.BuilderUnit;
         public bool IsBuilderBase => EntityType == EntityType.BuilderBase;
