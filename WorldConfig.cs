@@ -55,13 +55,16 @@ namespace Aicup2020
             if (currentTick <= 50)
                 return 0;
 
+            if (currentTick <= 150)
+                return 20;
+
             if (currentTick <= 200)
                 return 40;
 
             if (currentTick <= 500)
                 return 60;
 
-            return 70;
+            return 60;
         }
     }
 }
