@@ -18,8 +18,8 @@ namespace aicup2020.Managers
             int buildersCount = WorldConfig.MyEntites.Count(e => e.IsBuilderUnit);
             int provided = WorldConfig.MyPopulationProvided;
 
-            decimal warriorsPercent = warriorsCount / (decimal)provided * 100;
-            if (warriorsPercent < WorldConfig.WarriorPercent)
+            decimal buildersPercent = buildersCount / (decimal)provided * 100;
+            if (buildersPercent >= 100 - WorldConfig.WarriorPercent)
             {
                 foreach (var builderBase in myBuilderBases)
                 {
