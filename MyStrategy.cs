@@ -17,9 +17,9 @@ namespace Aicup2020
 
             TurretManager.Manage(playerView, actions);
 
-            BuilderBaseManager.Manage(playerView, actions);
-
             BuilderUnitManager.Manage(playerView, actions);
+
+            BuilderBaseManager.Manage(playerView, actions);
 
             RangedBaseManager.Manage(playerView, actions);
 

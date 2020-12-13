@@ -26,9 +26,13 @@ namespace aicup2020.Managers
 
         private static readonly List<(int, BuilderOrder)> ExecutedOrders = new List<(int, BuilderOrder)>();
 
-        private static Vec2Int[] _housePlaces = new Vec2Int[14]
+        private static Vec2Int[] _housePlaces = new Vec2Int[18]
         {
             new Vec2Int(12, 12),
+            new Vec2Int(12, 8),
+            new Vec2Int(8, 12),
+            new Vec2Int(12, 5),
+            new Vec2Int(5, 12),
             new Vec2Int(0, 0),
             new Vec2Int(4, 0),
             new Vec2Int(0, 3),
@@ -40,8 +44,8 @@ namespace aicup2020.Managers
             new Vec2Int(13, 0),
             new Vec2Int(0, 15),
             new Vec2Int(16, 0),
-            new Vec2Int(12, 5),
-            new Vec2Int(5, 12),
+            new Vec2Int(19, 0),
+            new Vec2Int(18, 0)
         };
 
         public static void Manage(PlayerView playerView, Dictionary<int, EntityAction> actions)
@@ -55,8 +59,12 @@ namespace aicup2020.Managers
 
             bool existsOrderOfBuild = UnitOrder.Values.Any(o => o.BuildAction != null && o.BuildAction.Value.EntityType == EntityType.House);
 
-            if (WorldConfig.MyPopulationUsed >= WorldConfig.MyPopulationProvided - 4 && !existsOrderOfBuild)
+            int costOfHouse = WorldConfig.EntityProperties[EntityType.House].Cost;
+
+            if (WorldConfig.MyPopulationUsed >= WorldConfig.MyPopulationProvided - 6 && !existsOrderOfBuild)
             {
+                WorldConfig.ResourcesUsedInRound += costOfHouse;
+
                 if (SelectPositionForBuildHouse(playerView, out Vec2Int housePosition))
                 {
                     var builderRanges = freeBuilders.Select(b => new { b.Id, Range = b.Position.RangeTo(housePosition) });
@@ -95,7 +103,7 @@ namespace aicup2020.Managers
             foreach (Entity housesForRepair in needRepairs.OrderBy(n => n.RepairPriority))
             {
                 bool tooManyOrderOfRepair = UnitOrder.Values
-                    .Count(o => o.RepairAction != null && o.RepairAction.Value.Target == housesForRepair.Id) >= 1;
+                    .Count(o => o.RepairAction != null && o.RepairAction.Value.Target == housesForRepair.Id) >= 3;
 
                 if (housesForRepair.Id > 0 && !tooManyOrderOfRepair)
                 {
@@ -125,41 +133,6 @@ namespace aicup2020.Managers
                     }
                 }
             }
-
-            //Entity housesForRepair = WorldConfig.MyEntites
-            //    .Where(e => e.EntityType == EntityType.House && e.Health < e.Properties.MaxHealth)
-            //    .FirstOrDefault();
-
-            //bool tooManyOrderOfRepair = UnitOrder.Values
-            //    .Count(o => o.RepairAction != null && o.RepairAction.Value.Target == housesForRepair.Id) >= 1;
-
-            //if (housesForRepair.Id > 0 && !tooManyOrderOfRepair)
-            //{
-            //    Vec2Int pos = housesForRepair.Position;
-            //    var builderRanges = freeBuilders.Select(b => new { b.Id, Range = b.Position.RangeTo(pos) });
-
-            //    if (builderRanges.Any())
-            //    {
-            //        double minRange = builderRanges.Min(b => b.Range);
-            //        int builderId = builderRanges.First(b => Math.Round(b.Range) == Math.Round(minRange)).Id;
-            //        Entity closestBuilder = freeBuilders.First(b => b.Id == builderId);
-
-            //        var repairAction = new RepairAction(target: housesForRepair.Id);
-            //        var moveAction = new MoveAction() { Target = pos, FindClosestPosition = true };
-
-            //        UnitOrder.Add(closestBuilder.Id, new BuilderOrder(null, repairAction));
-
-            //        EntityAction entityAction = new EntityAction()
-            //        {
-            //            RepairAction = repairAction,
-            //            MoveAction = moveAction
-            //        };
-
-            //        actions.Add(closestBuilder.Id, entityAction);
-
-            //        freeBuilders.RemoveAll(b => b.Id == closestBuilder.Id);
-            //    }
-            //}
 
             foreach (Entity builder in freeBuilders)
             {
