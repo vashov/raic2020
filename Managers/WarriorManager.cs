@@ -38,7 +38,7 @@ namespace aicup2020.Managers
 
                     foreach (var special in warriorsRanges)
                     {
-                        var moveAction = new MoveAction { Target = enemyBuilding.Position };
+                        var moveAction = new MoveAction { Target = enemyBuilding.Position, BreakThrough = true };
                         var attackAction = new AttackAction { AutoAttack = new AutoAttack(5, new EntityType[] { }) };
 
                         actions.Add(special.Id, new EntityAction()
