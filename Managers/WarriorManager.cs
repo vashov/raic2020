@@ -22,7 +22,8 @@ namespace aicup2020.Managers
                 foreach (Player player in enemyPlayers)
                 {
                     Entity enemyBuilding = playerView.Entities
-                        .Where(e => e.PlayerId == player.Id && (e.IsRangedBase || e.IsMeleeBase || e.IsBuilderBase))
+                        .Where(e => e.PlayerId == player.Id && (e.IsRangedBase || e.IsMeleeBase || e.IsBuilderBase || e.IsHouse || e.IsTurret))
+                        .OrderBy(e => e.AttackPriority)
                         .FirstOrDefault();
 
                     if (enemyBuilding.Id <= 0)

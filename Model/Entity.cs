@@ -47,6 +47,22 @@ namespace Aicup2020.Model
             }
         }
 
+        public int AttackPriority
+        {
+            get
+            {
+                return EntityType switch
+                {
+                    EntityType.Turret => 1,
+                    EntityType.RangedBase => 2,
+                    EntityType.MeleeBase => 3,
+                    EntityType.BuilderBase => 4,
+                    EntityType.House => 5,
+                    _ => 10
+                };
+            }
+        }
+
         public bool IsBuilderUnit => EntityType == EntityType.BuilderUnit;
         public bool IsBuilderBase => EntityType == EntityType.BuilderBase;
 
