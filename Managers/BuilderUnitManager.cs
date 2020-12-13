@@ -141,7 +141,7 @@ namespace aicup2020.Managers
                 entityAction = entityAction = new EntityAction() 
                 { 
                     MoveAction = new MoveAction(new Vec2Int(79, 79), findClosestPosition: true, breakThrough: true),
-                    AttackAction = new AttackAction(target: null, new AutoAttack(500, new EntityType[] { EntityType.Resource})) 
+                    AttackAction = new AttackAction(target: null, new AutoAttack(500, new EntityType[] { EntityType.Resource, EntityType.BuilderUnit})) 
                 };
 
                 actions.Add(builder.Id, entityAction);
