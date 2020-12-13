@@ -14,17 +14,19 @@ namespace aicup2020.Managers
         {
             IEnumerable<Entity> myBuilderBases = WorldConfig.MyEntites.Where(e => e.IsBuilderBase);
 
-            int countBuilders = WorldConfig.MyEntites.Where(e => e.IsBuilderUnit).Count();
-            //if (countBuilders >= 5)
-            //{
-            //    foreach (var builderBase in myBuilderBases)
-            //    {
-            //        actions.Add(builderBase.Id, new EntityAction());
-            //    }
+            int warriorsCount = WorldConfig.MyEntites.Count(e => e.IsWarrior);
+            int buildersCount = WorldConfig.MyEntites.Count(e => e.IsBuilderUnit);
+            int provided = WorldConfig.MyPopulationProvided;
 
-            //    return;
-            //}
-
+            decimal warriorsPercent = warriorsCount / (decimal)provided * 100;
+            if (warriorsPercent < WorldConfig.WarriorPercent)
+            {
+                foreach (var builderBase in myBuilderBases)
+                {
+                    actions.Add(builderBase.Id, new EntityAction());
+                }
+                return;
+            }
 
             int costOfBuilderUnit = WorldConfig.EntityProperties[EntityType.BuilderUnit].Cost;
             foreach (Entity builderBase in myBuilderBases)
@@ -37,7 +39,7 @@ namespace aicup2020.Managers
 
                 WorldConfig.ResourcesUsedInRound += costOfBuilderUnit;
 
-                var position = GetPositionForUnit(builderBase, playerView, countBuilders);
+                var position = GetPositionForUnit(builderBase, playerView, buildersCount);
 
                 var buildAction = new BuildAction()
                 { 

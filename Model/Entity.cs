@@ -144,5 +144,11 @@ namespace Aicup2020.Model
             decimal halfMap = WorldConfig.MapSize / (decimal)2;
             return Position.X <= halfMap && Position.Y <= halfMap;
         }
+
+        public bool InMyMiniBase()
+        {
+            decimal thirdMap = WorldConfig.MapSize / (decimal)3;
+            return Position.X <= thirdMap && Position.Y <= thirdMap;
+        }
     }
 }

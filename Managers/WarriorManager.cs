@@ -9,14 +9,52 @@ namespace aicup2020.Managers
     {
         public static void ManageUnits(PlayerView playerView, Dictionary<int, EntityAction> actions)
         {
-            IEnumerable<Entity> warriors = playerView.Entities.Where(e => e.IsMyEntity && e.IsWarrior);
+            List<Entity> allWarriors = playerView.Entities.Where(e => e.IsMyEntity && e.IsWarrior).ToList();
+
+            List<Entity> freeWarriors = allWarriors.ToList();
 
             IEnumerable<Entity> enemiesInMyBase = playerView.Entities.Where(e => e.IsEnemyEntity && e.InMyBase());
 
-            //IOrderedEnumerable<Entity> enemyBuildings = playerView.Entities
-            //    .Where(e => e.IsEnemy()).OrderBy(e => e.PlayerId).ThenBy(e => e.Id);
+            int warriorsCount = allWarriors.Count();
+            if (warriorsCount > 20)
+            {
+                IOrderedEnumerable<Player> enemyPlayers = WorldConfig.EnemyPlayers.OrderByDescending(p => p.Score);
+                foreach (Player player in enemyPlayers)
+                {
+                    Entity enemyBuilding = playerView.Entities
+                        .Where(e => e.PlayerId == player.Id && (e.IsRangedBase || e.IsMeleeBase || e.IsBuilderBase))
+                        .FirstOrDefault();
 
-            foreach (Entity warrior in warriors)
+                    if (enemyBuilding.Id <= 0)
+                        continue;
+
+                    // SPECIAL FORCES!
+                    int teamSize = warriorsCount * 60 / 100;
+
+                    var warriorsRanges = allWarriors
+                        .Select(w => new { w.Id, Range = w.Position.RangeTo(enemyBuilding.Position) })
+                        .OrderBy(r => r.Range)
+                        .Take(teamSize);
+
+                    foreach (var special in warriorsRanges)
+                    {
+                        var moveAction = new MoveAction { Target = enemyBuilding.Position };
+                        var attackAction = new AttackAction { AutoAttack = new AutoAttack(5, new EntityType[] { }) };
+
+                        actions.Add(special.Id, new EntityAction()
+                        {
+                            MoveAction = moveAction,
+                            AttackAction = attackAction
+                        });
+
+                        freeWarriors.RemoveAll(w => w.Id == special.Id);
+                    }
+
+                    break;
+                }
+            }
+
+            foreach (Entity warrior in freeWarriors)
             {
                 if (enemiesInMyBase.Any())
                 {
@@ -26,24 +64,19 @@ namespace aicup2020.Managers
                     int enemyId = enemiesRanges.First(r => r.Range == minRange).Id;
                     Entity closestEnemy = enemiesInMyBase.First(r => r.Id == enemyId);
 
-                    if (warrior.CanAttack(closestEnemy))
-                    {
-                        var attackAction = new AttackAction { Target = closestEnemy.Id };
-
-                        actions.Add(warrior.Id, new EntityAction() { AttackAction = attackAction });
-
-                        continue;
-                    }
-
                     var moveAction = new MoveAction { Target = closestEnemy.Position };
-                    actions.Add(warrior.Id, new EntityAction() { MoveAction = moveAction });
+                    var attackAction = new AttackAction { Target = closestEnemy.Id };
+
+                    actions.Add(warrior.Id, new EntityAction() 
+                    { 
+                        MoveAction = moveAction,
+                        AttackAction = attackAction
+                    });
 
                     continue;
                 }
                 else
                 {
-                    //int halfMap = WorldConfig.MapSize / 2;
-
                     Vec2Int pointForCenter = new Vec2Int { X = 20, Y = 20 };
 
                     var moveAction = new MoveAction { Target = pointForCenter };

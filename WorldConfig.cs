@@ -1,4 +1,5 @@
 ﻿using Aicup2020.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -22,6 +23,8 @@ namespace Aicup2020
 
         public static int MapSize { get; set; }
 
+        public static decimal WarriorPercent { get; set; }
+
         public static void Init(PlayerView playerView)
         {
             if (!IsInitialized)
@@ -30,6 +33,8 @@ namespace Aicup2020
                 MapSize = playerView.MapSize;
                 IsInitialized = true;
             }
+
+            WarriorPercent = GetWarriorPercent(playerView.CurrentTick);
 
             ResourcesUsedInRound = 0;
 
@@ -43,6 +48,17 @@ namespace Aicup2020
 
             MyPopulationUsed = MyEntites.Sum(e => EntityProperties[e.EntityType].PopulationUse);
             MyPopulationProvided = MyEntites.Sum(e => EntityProperties[e.EntityType].PopulationProvide);
+        }
+
+        private static decimal GetWarriorPercent(int currentTick)
+        {
+            if (currentTick <= 50)
+                return 0;
+
+            if (currentTick <= 200)
+                return 50;
+
+            return 80;
         }
     }
 }

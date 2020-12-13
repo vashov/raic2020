@@ -14,14 +14,17 @@ namespace aicup2020.Managers
         {
             IEnumerable<Entity> myRangedBases = WorldConfig.MyEntites.Where(e => e.IsRangedBase);
 
-            int countWarriors = WorldConfig.MyEntites.Where(e => e.IsWarrior).Count();
-            if (countWarriors >= 10)
+            int warriorsCount = WorldConfig.MyEntites.Count(e => e.IsWarrior);
+            int buildersCount = WorldConfig.MyEntites.Count(e => e.IsBuilderUnit);
+            int provided = WorldConfig.MyPopulationProvided;
+
+            decimal warriorsPercent = warriorsCount / (decimal)provided * 100;
+            if (warriorsPercent >= WorldConfig.WarriorPercent)
             {
                 foreach (var rangedBase in myRangedBases)
                 {
                     actions.Add(rangedBase.Id, new EntityAction());
                 }
-
                 return;
             }
 
