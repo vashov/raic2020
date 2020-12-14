@@ -79,6 +79,56 @@ namespace aicup2020.Managers
             UpdateCompletedOrders(allBuilders, playerView);
             ClearUnitOrdersFromDeadBuilders(allBuilders);
 
+            List<Entity> enemyAttakers = playerView.Entities
+                .Where(e => e.IsEnemyEntity && (e.IsTurret || e.IsWarrior))
+                .ToList();
+
+            List<int> runningFromEnemy = new List<int>();
+            foreach (Entity builder in allBuilders)
+            {
+                var enemyDistance = enemyAttakers.Select(e => new 
+                {
+                    e.Position, 
+                    Distance = e.Position.RangeTo(builder.Position), 
+                    AttackRange = e.Properties.Attack.Value.AttackRange 
+                });
+
+                var closestEnemy = enemyDistance.FirstOrDefault(d => d.Distance - 2 < d.AttackRange);
+                if (closestEnemy == null)
+                {
+                    continue;
+                }
+
+                int moveX = closestEnemy.Position.X > builder.Position.X ? -1
+                    : closestEnemy.Position.X < builder.Position.X ? 1 : 0;
+
+                int moveY = closestEnemy.Position.Y > builder.Position.Y ? -1
+                    : closestEnemy.Position.Y < builder.Position.Y ? 1 : 0;
+
+                int newPosX = (builder.Position.X + moveX) > WorldConfig.MapSize || (builder.Position.X + moveX) < 0 ?
+                    builder.Position.X : builder.Position.X + moveX;
+
+                int newPosY = (builder.Position.Y + moveY) > WorldConfig.MapSize || (builder.Position.Y + moveY) < 0 ?
+                    builder.Position.Y : builder.Position.Y + moveY;
+
+                var movePos = new Vec2Int(newPosX, newPosY);
+                var moveAction = new MoveAction() { Target = movePos, FindClosestPosition = true };
+
+                UnitOrder.Remove(builder.Id);
+
+                EntityAction entityAction = new EntityAction()
+                {
+                    BuildAction = null,
+                    MoveAction = moveAction,
+                    AttackAction = null,
+                    RepairAction = null
+                };
+
+                runningFromEnemy.Add(builder.Id);
+                actions.Add(builder.Id, entityAction);
+            }
+
+            allBuilders.RemoveAll(e => runningFromEnemy.Contains(e.Id));
             List<Entity> freeBuilders = allBuilders.Where(b => !UnitOrder.ContainsKey(b.Id)).ToList();
 
             bool existsOrderOfBuild = UnitOrder.Values.Any(o => o.BuildAction != null && o.BuildAction.Value.EntityType == EntityType.RangedBase);
@@ -126,15 +176,18 @@ namespace aicup2020.Managers
 
             existsOrderOfBuild = UnitOrder.Values.Any(o => o.BuildAction != null && o.BuildAction.Value.EntityType == EntityType.House);
 
-            if (WorldConfig.MyPopulationUsed >= WorldConfig.MyPopulationProvided - 6 && !existsOrderOfBuild)
+            int costOfHouse = WorldConfig.EntityProperties[EntityType.House].Cost;
+            int coustOfRangedBase = WorldConfig.EntityProperties[EntityType.RangedBase].Cost;
+
+            bool canBuildHouseAndRangedBase = WorldConfig.MyPlayer.Resource > WorldConfig.ResourcesUsedInRound + costOfHouse + coustOfRangedBase;
+
+            if ((canBuildHouseAndRangedBase || WorldConfig.MyPopulationUsed >= WorldConfig.MyPopulationProvided - 6) && !existsOrderOfBuild)
             {
                 int countOfHouses = WorldConfig.MyEntites.Where(e => e.IsHouse).Count();
 
-                int costOfHouse = WorldConfig.EntityProperties[EntityType.House].Cost;
-
                 bool canBuildHouse = WorldConfig.MyPlayer.Resource > WorldConfig.ResourcesUsedInRound + costOfHouse;
 
-                bool needBuildHouse = countOfHouses < 6 || countOfWarriorBases > 0;
+                bool needBuildHouse = countOfHouses < 6 || countOfWarriorBases > 0 || canBuildHouseAndRangedBase;
 
                 if (canBuildHouse && needBuildHouse && SelectPositionForBuilding(playerView, EntityType.House, out Vec2Int housePosition, playerView.CurrentTick))
                 {
@@ -227,22 +280,7 @@ namespace aicup2020.Managers
 
         private static Vec2Int GetMovePositionForBuildHouse(Vec2Int housePosition)
         {
-            if (housePosition.X == 0 && housePosition.Y == 0)
-                return new Vec2Int(3, 2);
-
-            if (housePosition.X == 0)
-                return new Vec2Int(housePosition.X + 3, housePosition.Y);
-
-            if (housePosition.Y == 0)
-                return new Vec2Int(housePosition.X, housePosition.Y + 3);
-
-            if (housePosition.X == 12)
-                return new Vec2Int(housePosition.X - 1, housePosition.Y);
-
-            if (housePosition.Y == 12)
-                return new Vec2Int(housePosition.X, housePosition.Y - 1);
-
-            return housePosition;
+            return new Vec2Int(housePosition.X, housePosition.Y);
         }
 
         private static Vec2Int GetMovePositionForBuildRangedBase(Vec2Int rangedBasePosition)

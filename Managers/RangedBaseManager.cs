@@ -61,8 +61,53 @@ namespace aicup2020.Managers
 
             int size = builderBase.Properties.Size;
 
-            var newPosition = new Vec2Int(basePosition.X + size, basePosition.Y + size - 1);
-            return newPosition;
+            List<Vec2Int> respawnPlaces = new List<Vec2Int>(size * 2);
+
+            for (int x = 0; x < size; x++)
+            {
+                Vec2Int posX = basePosition;
+                Vec2Int posY = basePosition;
+
+                posX.X += size;
+                posX.Y += (size - 1 - x);
+
+                posY.Y += size;
+                posY.X += (size - 1 - x);
+
+                respawnPlaces.Add(posX);
+                respawnPlaces.Add(posY);
+            }
+
+            foreach (Entity entity in playerView.Entities)
+            {
+                int entitySize = entity.Properties.Size;
+
+                Vec2Int[] entityPlace = new Vec2Int[entitySize * entitySize];
+                int index = 0;
+                for (int x = 0; x < entitySize; x++)
+                {
+                    for (int y = 0; y < entitySize; y++)
+                    {
+                        Vec2Int entityPos = entity.Position;
+                        entityPos.X += x;
+                        entityPos.Y += y;
+
+                        entityPlace[index++] = entityPos;
+                    }
+                }
+
+                foreach(var pl in entityPlace)
+                {
+                    index = respawnPlaces.IndexOf(pl);
+                    if (index >= 0)
+                        respawnPlaces.RemoveAt(index);
+                }
+            }
+
+            if (respawnPlaces.Any())
+                return respawnPlaces.First();
+
+            return new Vec2Int(basePosition.X + size, basePosition.Y - 1);
         }
     }
 }

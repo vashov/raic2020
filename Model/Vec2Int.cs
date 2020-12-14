@@ -32,5 +32,15 @@ namespace Aicup2020.Model
         public static bool operator ==(Vec2Int v1, Vec2Int v2) => v1.X == v2.X && v1.Y == v2.Y;
 
         public static bool operator !=(Vec2Int v1, Vec2Int v2) => v1.X != v2.X || v1.Y != v2.Y;
+
+        public static Vec2Int operator +(Vec2Int v1, Vec2Int v2)
+        {
+            return new Vec2Int(v1.X + v2.X, v1.Y + v2.Y);
+        }
+
+        public static Vec2Int operator -(Vec2Int v1, Vec2Int v2)
+        {
+            return new Vec2Int(v2.X - v1.X, v2.Y - v1.Y);
+        }
     }
 }
