@@ -7,9 +7,38 @@ namespace aicup2020.Managers
 {
     public static class WarriorManager
     {
+        public class AttackPos
+        {
+            public bool Completed { get; set; }
+            public Vec2Int Pos { get; set; }
+        }
+
+        public static List<AttackPos> NeedAttackList = new List<AttackPos>
+        {
+            new AttackPos { Pos = new Vec2Int(75, 5) },
+            new AttackPos { Pos = new Vec2Int(5, 75) },
+            new AttackPos { Pos = new Vec2Int(75, 75) },
+        };
+
         public static void ManageUnits(PlayerView playerView, Dictionary<int, EntityAction> actions)
         {
+            if (NeedAttackList.All(p => p.Completed))
+            {
+                NeedAttackList.ForEach(p => p.Completed = false);
+            }
+
+            Vec2Int attackPos = NeedAttackList.First(p => !p.Completed).Pos;
+
             List<Entity> allWarriors = playerView.Entities.Where(e => e.IsMyEntity && e.IsWarrior).ToList();
+
+            foreach (var pos in NeedAttackList)
+            {
+                if (allWarriors.Any(p => p.Position == pos.Pos))
+                {
+                    pos.Completed = true;
+                    continue;
+                }
+            }
 
             List<Entity> freeWarriors = allWarriors.ToList();
 
@@ -26,20 +55,24 @@ namespace aicup2020.Managers
                         .OrderBy(e => e.AttackPriority)
                         .FirstOrDefault();
 
-                    if (enemyBuilding.Id <= 0)
-                        continue;
+                    
+                    if (enemyBuilding.Id > 0)
+                    {
+                        attackPos = enemyBuilding.Position;
+                    }
+
 
                     // SPECIAL FORCES!
                     int teamSize = warriorsCount * 60 / 100;
 
                     var warriorsRanges = allWarriors
-                        .Select(w => new { w.Id, Range = w.Position.RangeTo(enemyBuilding.Position) })
+                        .Select(w => new { w.Id, Range = w.Position.RangeTo(attackPos) })
                         .OrderBy(r => r.Range)
                         .Take(teamSize);
 
                     foreach (var special in warriorsRanges)
                     {
-                        var moveAction = new MoveAction { Target = enemyBuilding.Position, BreakThrough = true };
+                        var moveAction = new MoveAction { Target = attackPos, BreakThrough = true };
                         var attackAction = new AttackAction { AutoAttack = new AutoAttack(5, new EntityType[] { }) };
 
                         actions.Add(special.Id, new EntityAction()

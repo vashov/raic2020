@@ -48,6 +48,12 @@ namespace aicup2020.Managers
             new Vec2Int(18, 0)
         };
 
+        private static Vec2Int[] _rangedBasePlaces = new Vec2Int[2]
+        {
+            new Vec2Int(15, 5),
+            new Vec2Int(5, 15)
+        };
+
         public static void Manage(PlayerView playerView, Dictionary<int, EntityAction> actions)
         {
             List<Entity> allBuilders = WorldConfig.MyEntites.Where(e => e.IsBuilderUnit).ToList();
@@ -57,16 +63,65 @@ namespace aicup2020.Managers
 
             List<Entity> freeBuilders = allBuilders.Where(b => !UnitOrder.ContainsKey(b.Id)).ToList();
 
-            bool existsOrderOfBuild = UnitOrder.Values.Any(o => o.BuildAction != null && o.BuildAction.Value.EntityType == EntityType.House);
+            bool existsOrderOfBuild = UnitOrder.Values.Any(o => o.BuildAction != null && o.BuildAction.Value.EntityType == EntityType.RangedBase);
 
-            int costOfHouse = WorldConfig.EntityProperties[EntityType.House].Cost;
+            int countOfWarriorBases = WorldConfig.MyEntites.Where(e => e.IsMeleeBase || e.IsRangedBase).Count();
+            if (!existsOrderOfBuild && countOfWarriorBases < 1)
+            {
+                int costOfRangedBase = WorldConfig.EntityProperties[EntityType.RangedBase].Cost;
+
+                bool canBuildRangedBase = WorldConfig.MyPlayer.Resource > WorldConfig.ResourcesUsedInRound + costOfRangedBase;
+
+                if (canBuildRangedBase && SelectPositionForBuilding(playerView, EntityType.RangedBase, out Vec2Int rangedBasePos))
+                {
+                    WorldConfig.ResourcesUsedInRound += costOfRangedBase;
+
+                    var builderRanges = freeBuilders.Select(b => new { b.Id, Range = b.Position.RangeTo(rangedBasePos) });
+
+                    if (builderRanges.Any())
+                    {
+                        double minRange = builderRanges.Min(b => b.Range);
+                        int builderId = builderRanges.First(b => Math.Round(b.Range) == Math.Round(minRange)).Id;
+                        Entity closestBuilder = freeBuilders.First(b => b.Id == builderId);
+
+                        Vec2Int movePos = rangedBasePos;
+
+                        movePos = GetMovePositionForBuildRangedBase(rangedBasePos);
+
+                        var buildAction = new BuildAction(EntityType.RangedBase, rangedBasePos);
+                        var moveAction = new MoveAction() { Target = movePos, FindClosestPosition = false };
+
+                        UnitOrder.Add(closestBuilder.Id, new BuilderOrder(buildAction, null));
+
+                        EntityAction entityAction = new EntityAction()
+                        {
+                            BuildAction = buildAction,
+                            MoveAction = moveAction
+                        };
+
+                        actions.Add(closestBuilder.Id, entityAction);
+
+                        freeBuilders.RemoveAll(b => b.Id == closestBuilder.Id);
+                    }
+                }
+            }
+
+            existsOrderOfBuild = UnitOrder.Values.Any(o => o.BuildAction != null && o.BuildAction.Value.EntityType == EntityType.House);
 
             if (WorldConfig.MyPopulationUsed >= WorldConfig.MyPopulationProvided - 6 && !existsOrderOfBuild)
             {
-                WorldConfig.ResourcesUsedInRound += costOfHouse;
+                int countOfHouses = WorldConfig.MyEntites.Where(e => e.IsHouse).Count();
 
-                if (SelectPositionForBuildHouse(playerView, out Vec2Int housePosition))
+                int costOfHouse = WorldConfig.EntityProperties[EntityType.House].Cost;
+
+                bool canBuildHouse = WorldConfig.MyPlayer.Resource > WorldConfig.ResourcesUsedInRound + costOfHouse;
+
+                bool needBuildHouse = countOfHouses < 6 || countOfWarriorBases > 0;
+
+                if (canBuildHouse && needBuildHouse && SelectPositionForBuilding(playerView, EntityType.House, out Vec2Int housePosition))
                 {
+                    WorldConfig.ResourcesUsedInRound += costOfHouse;
+
                     var builderRanges = freeBuilders.Select(b => new { b.Id, Range = b.Position.RangeTo(housePosition) });
 
                     if (builderRanges.Any())
@@ -170,6 +225,11 @@ namespace aicup2020.Managers
             return housePosition;
         }
 
+        private static Vec2Int GetMovePositionForBuildRangedBase(Vec2Int rangedBasePosition)
+        {
+            return new Vec2Int(rangedBasePosition.X - 1, rangedBasePosition.Y);
+        }
+
         private static void UpdateCompletedOrders(List<Entity> allBuilders, PlayerView playerView)
         {
             List<int> idsForCleaning = new List<int>();
@@ -200,26 +260,29 @@ namespace aicup2020.Managers
             idsForCleaning.ForEach(id => UnitOrder.Remove(id));
         }
 
-        private static bool SelectPositionForBuildHouse(PlayerView playerView, out Vec2Int position)
+        private static bool SelectPositionForBuilding(PlayerView playerView, EntityType buildingType, out Vec2Int position)
         {
-            int houseSize = playerView.EntityProperties[EntityType.House].Size;
+            int size = playerView.EntityProperties[buildingType].Size;
 
-            foreach (Vec2Int place in _housePlaces)
+            Vec2Int[] places = buildingType == EntityType.House ? _housePlaces : _rangedBasePlaces;
+
+            foreach (Vec2Int place in places)
             {
                 bool isFree = true;
 
                 foreach (Entity entity in playerView.Entities)
                 {
-                    for (int x = 0; x < houseSize; x++)
+                    for (int x = 0; x < size; x++)
                     {
-                        for (int y = 0; y < houseSize; y++)
+                        for (int y = 0; y < size; y++)
                         {
                             var pos = entity.Position;
 
-                            pos.X += x;
-                            pos.Y += y;
+                            var placePos = place;
+                            placePos.X += x;
+                            placePos.Y += y;
 
-                            if (pos == place)
+                            if (pos == placePos)
                             {
                                 isFree = false;
                                 goto gotoLable;
