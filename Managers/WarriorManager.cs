@@ -9,15 +9,16 @@ namespace aicup2020.Managers
     {
         public class AttackPos
         {
+            public int PlayerId { get; set; }
             public bool Completed { get; set; }
             public Vec2Int Pos { get; set; }
         }
 
-        public static List<AttackPos> NeedAttackList = new List<AttackPos>
+        private static readonly List<AttackPos> NeedAttackList = new List<AttackPos>
         {
-            new AttackPos { Pos = new Vec2Int(75, 5) },
-            new AttackPos { Pos = new Vec2Int(5, 75) },
-            new AttackPos { Pos = new Vec2Int(75, 75) },
+            new AttackPos { PlayerId = 3, Pos = new Vec2Int(75, 5) },
+            new AttackPos { PlayerId = 4, Pos = new Vec2Int(5, 75) },
+            new AttackPos { PlayerId = 5, Pos = new Vec2Int(75, 75) },
         };
 
         public static void ManageUnits(PlayerView playerView, Dictionary<int, EntityAction> actions)
@@ -47,42 +48,26 @@ namespace aicup2020.Managers
             int warriorsCount = allWarriors.Count;
             if (warriorsCount > 20)
             {
-                IOrderedEnumerable<Player> enemyPlayers = WorldConfig.EnemyPlayers.OrderByDescending(p => p.Score);
-                foreach (Player player in enemyPlayers)
+                // SPECIAL FORCES!
+                int teamSize = (warriorsCount - 5) * 60 / 100;
+
+                var warriorsRanges = allWarriors
+                    .Select(w => new { w.Id, Range = w.Position.RangeTo(attackPos) })
+                    .OrderBy(r => r.Range)
+                    .Take(teamSize);
+
+                foreach (var special in warriorsRanges)
                 {
-                    Entity enemyBuilding = playerView.Entities
-                        .Where(e => e.PlayerId == player.Id && (e.IsRangedBase || e.IsMeleeBase || e.IsBuilderBase || e.IsHouse || e.IsTurret))
-                        .OrderBy(e => e.AttackPriority)
-                        .FirstOrDefault();
+                    var moveAction = new MoveAction { Target = attackPos, BreakThrough = true };
+                    var attackAction = new AttackAction { AutoAttack = new AutoAttack(10, new EntityType[] { }) };
 
-                    if (enemyBuilding.Id > 0)
+                    actions.Add(special.Id, new EntityAction()
                     {
-                        attackPos = enemyBuilding.Position;
-                    }
+                        MoveAction = moveAction,
+                        AttackAction = attackAction
+                    });
 
-                    // SPECIAL FORCES!
-                    int teamSize = warriorsCount * 60 / 100;
-
-                    var warriorsRanges = allWarriors
-                        .Select(w => new { w.Id, Range = w.Position.RangeTo(attackPos) })
-                        .OrderBy(r => r.Range)
-                        .Take(teamSize);
-
-                    foreach (var special in warriorsRanges)
-                    {
-                        var moveAction = new MoveAction { Target = attackPos, BreakThrough = true };
-                        var attackAction = new AttackAction { AutoAttack = new AutoAttack(5, new EntityType[] { }) };
-
-                        actions.Add(special.Id, new EntityAction()
-                        {
-                            MoveAction = moveAction,
-                            AttackAction = attackAction
-                        });
-
-                        freeWarriors.RemoveAll(w => w.Id == special.Id);
-                    }
-
-                    break;
+                    freeWarriors.RemoveAll(w => w.Id == special.Id);
                 }
             }
 

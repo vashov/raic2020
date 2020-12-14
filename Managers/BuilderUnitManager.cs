@@ -26,7 +26,7 @@ namespace aicup2020.Managers
 
         private static readonly List<(int, BuilderOrder)> ExecutedOrders = new List<(int, BuilderOrder)>();
 
-        private static Vec2Int[] _housePlaces = new Vec2Int[21]
+        private static Vec2Int[] _housePlaces = new Vec2Int[26]
         {
             //new Vec2Int(12, 12),
             //new Vec2Int(11, 8),
@@ -52,10 +52,17 @@ namespace aicup2020.Managers
             new Vec2Int(17, 8),
             new Vec2Int(8, 17),
 
+            new Vec2Int(12, 12),
+
             new Vec2Int(22, 1),
             new Vec2Int(1, 22),
             new Vec2Int(25, 1),
-            new Vec2Int(1, 25)
+            new Vec2Int(1, 25),
+
+            new Vec2Int(5, 20),
+            new Vec2Int(20, 5),
+            new Vec2Int(8, 20),
+            new Vec2Int(20, 8)
         };
 
         private static Vec2Int[] _rangedBasePlaces = new Vec2Int[3]
@@ -275,28 +282,53 @@ namespace aicup2020.Managers
 
         private static bool SelectPositionForBuilding(PlayerView playerView, EntityType buildingType, out Vec2Int position, int currentTick)
         {
-            int size = playerView.EntityProperties[buildingType].Size;
-
             Vec2Int[] places = buildingType == EntityType.House ? _housePlaces : _rangedBasePlaces;
-            int take = buildingType == EntityType.House && currentTick < 300 ? places.Length - 4 : places.Length;
+
+            int minus = 0;
+            if (buildingType == EntityType.House)
+            {
+                if (currentTick < 300)
+                    minus = 8;
+                else if (currentTick < 400)
+                    minus = 4;
+            }
+
+            int take = places.Length - minus;
 
             foreach (Vec2Int place in places.Take(take))
             {
                 bool isFree = true;
 
+                var l = playerView.Entities.Where(e => e.IsMeleeBase).ToList();
                 foreach (Entity entity in playerView.Entities)
                 {
-                    for (int x = 0; x < size; x++)
-                    {
-                        for (int y = 0; y < size; y++)
-                        {
-                            var pos = entity.Position;
+                    int entitySize = entity.Properties.Size;
 
-                            var placePos = place;
+                    Vec2Int[] entityPlace = new Vec2Int[entitySize * entitySize];
+                    int index = 0;
+                    for (int x = 0; x < entitySize; x++)
+                    {
+                        for (int y = 0; y < entitySize; y++)
+                        {
+                            Vec2Int entityPos = entity.Position;
+                            entityPos.X += x;
+                            entityPos.Y += y;
+
+                            entityPlace[index++] = entityPos;
+                        }
+                    }
+
+                    int buildingSize = playerView.EntityProperties[buildingType].Size;
+
+                    for (int x = 0; x < buildingSize; x++)
+                    {
+                        for (int y = 0; y < buildingSize; y++)
+                        {
+                            Vec2Int placePos = place;
                             placePos.X += x;
                             placePos.Y += y;
 
-                            if (pos == placePos)
+                            if (entityPlace.Contains(placePos))
                             {
                                 isFree = false;
                                 goto gotoLable;
