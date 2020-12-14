@@ -18,15 +18,19 @@ namespace aicup2020.Managers
             int buildersCount = WorldConfig.MyEntites.Count(e => e.IsBuilderUnit);
             int provided = WorldConfig.MyPopulationProvided;
 
-            decimal warriorsPercent = warriorsCount / (decimal)provided * 100;
-            if (warriorsPercent >= WorldConfig.WarriorPercent)
+            if (provided != 0)
             {
-                foreach (var rangedBase in myRangedBases)
+                decimal warriorsPercent = warriorsCount / (decimal)provided * 100;
+                if (warriorsPercent >= WorldConfig.WarriorPercent)
                 {
-                    actions.Add(rangedBase.Id, new EntityAction());
+                    foreach (var rangedBase in myRangedBases)
+                    {
+                        actions.Add(rangedBase.Id, new EntityAction());
+                    }
+                    return;
                 }
-                return;
             }
+            
 
             int costOfRangedUnit = WorldConfig.EntityProperties[EntityType.RangedUnit].Cost;
 

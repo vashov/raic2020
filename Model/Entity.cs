@@ -26,6 +26,20 @@ namespace Aicup2020.Model
         public bool IsHouse => EntityType == EntityType.House;
         public bool IsTurret => EntityType == EntityType.Turret;
 
+        public int AllowCountOfBuildersToRepair
+        {
+            get
+            {
+                return EntityType switch
+                {
+                    EntityType.BuilderBase => 5,
+                    EntityType.RangedBase => 5,
+                    EntityType.MeleeBase => 5,
+                    _ => 3
+                };
+            }
+        }
+
         public bool RepairAllowed => IsHouse || IsTurret || IsBuilderBase || IsRangedBase || IsMeleeBase;
 
         public int RepairPriority

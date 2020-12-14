@@ -44,7 +44,7 @@ namespace aicup2020.Managers
 
             IEnumerable<Entity> enemiesInMyBase = playerView.Entities.Where(e => e.IsEnemyEntity && e.InMyBase());
 
-            int warriorsCount = allWarriors.Count();
+            int warriorsCount = allWarriors.Count;
             if (warriorsCount > 20)
             {
                 IOrderedEnumerable<Player> enemyPlayers = WorldConfig.EnemyPlayers.OrderByDescending(p => p.Score);
@@ -55,12 +55,10 @@ namespace aicup2020.Managers
                         .OrderBy(e => e.AttackPriority)
                         .FirstOrDefault();
 
-                    
                     if (enemyBuilding.Id > 0)
                     {
                         attackPos = enemyBuilding.Position;
                     }
-
 
                     // SPECIAL FORCES!
                     int teamSize = warriorsCount * 60 / 100;

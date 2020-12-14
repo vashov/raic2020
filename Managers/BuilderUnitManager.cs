@@ -26,32 +26,43 @@ namespace aicup2020.Managers
 
         private static readonly List<(int, BuilderOrder)> ExecutedOrders = new List<(int, BuilderOrder)>();
 
-        private static Vec2Int[] _housePlaces = new Vec2Int[18]
+        private static Vec2Int[] _housePlaces = new Vec2Int[21]
         {
-            new Vec2Int(12, 12),
-            new Vec2Int(12, 8),
-            new Vec2Int(8, 12),
-            new Vec2Int(12, 5),
-            new Vec2Int(5, 12),
-            new Vec2Int(0, 0),
-            new Vec2Int(4, 0),
-            new Vec2Int(0, 3),
-            new Vec2Int(0, 6),
-            new Vec2Int(7, 0),
-            new Vec2Int(0, 9),
-            new Vec2Int(10, 0),
-            new Vec2Int(0, 12),
-            new Vec2Int(13, 0),
-            new Vec2Int(0, 15),
-            new Vec2Int(16, 0),
-            new Vec2Int(19, 0),
-            new Vec2Int(18, 0)
+            //new Vec2Int(12, 12),
+            //new Vec2Int(11, 8),
+            //new Vec2Int(8, 11),
+            //new Vec2Int(11, 5),
+            //new Vec2Int(5, 11),
+            new Vec2Int(1, 1),
+            new Vec2Int(4, 1),
+            new Vec2Int(1, 4),
+            new Vec2Int(1, 7),
+            new Vec2Int(7, 1),
+            new Vec2Int(1, 10),
+            new Vec2Int(10, 1),
+            new Vec2Int(1, 13),
+            new Vec2Int(13, 1),
+            new Vec2Int(1, 16),
+            new Vec2Int(16, 1),
+            new Vec2Int(19, 1),
+            new Vec2Int(1, 19),
+
+            new Vec2Int(5, 17),
+            new Vec2Int(17, 5),
+            new Vec2Int(17, 8),
+            new Vec2Int(8, 17),
+
+            new Vec2Int(22, 1),
+            new Vec2Int(1, 22),
+            new Vec2Int(25, 1),
+            new Vec2Int(1, 25)
         };
 
-        private static Vec2Int[] _rangedBasePlaces = new Vec2Int[2]
+        private static Vec2Int[] _rangedBasePlaces = new Vec2Int[3]
         {
-            new Vec2Int(15, 5),
-            new Vec2Int(5, 15)
+            new Vec2Int(11, 5),
+            new Vec2Int(5, 11),
+            new Vec2Int(11, 11)
         };
 
         public static void Manage(PlayerView playerView, Dictionary<int, EntityAction> actions)
@@ -72,7 +83,7 @@ namespace aicup2020.Managers
 
                 bool canBuildRangedBase = WorldConfig.MyPlayer.Resource > WorldConfig.ResourcesUsedInRound + costOfRangedBase;
 
-                if (canBuildRangedBase && SelectPositionForBuilding(playerView, EntityType.RangedBase, out Vec2Int rangedBasePos))
+                if (canBuildRangedBase && SelectPositionForBuilding(playerView, EntityType.RangedBase, out Vec2Int rangedBasePos, playerView.CurrentTick))
                 {
                     WorldConfig.ResourcesUsedInRound += costOfRangedBase;
 
@@ -118,7 +129,7 @@ namespace aicup2020.Managers
 
                 bool needBuildHouse = countOfHouses < 6 || countOfWarriorBases > 0;
 
-                if (canBuildHouse && needBuildHouse && SelectPositionForBuilding(playerView, EntityType.House, out Vec2Int housePosition))
+                if (canBuildHouse && needBuildHouse && SelectPositionForBuilding(playerView, EntityType.House, out Vec2Int housePosition, playerView.CurrentTick))
                 {
                     WorldConfig.ResourcesUsedInRound += costOfHouse;
 
@@ -157,8 +168,10 @@ namespace aicup2020.Managers
 
             foreach (Entity housesForRepair in needRepairs.OrderBy(n => n.RepairPriority))
             {
-                bool tooManyOrderOfRepair = UnitOrder.Values
-                    .Count(o => o.RepairAction != null && o.RepairAction.Value.Target == housesForRepair.Id) >= 3;
+                int countOfOrdersToRepair = UnitOrder.Values
+                    .Count(o => o.RepairAction != null && o.RepairAction.Value.Target == housesForRepair.Id);
+
+                bool tooManyOrderOfRepair = countOfOrdersToRepair >= housesForRepair.AllowCountOfBuildersToRepair;
 
                 if (housesForRepair.Id > 0 && !tooManyOrderOfRepair)
                 {
@@ -260,13 +273,14 @@ namespace aicup2020.Managers
             idsForCleaning.ForEach(id => UnitOrder.Remove(id));
         }
 
-        private static bool SelectPositionForBuilding(PlayerView playerView, EntityType buildingType, out Vec2Int position)
+        private static bool SelectPositionForBuilding(PlayerView playerView, EntityType buildingType, out Vec2Int position, int currentTick)
         {
             int size = playerView.EntityProperties[buildingType].Size;
 
             Vec2Int[] places = buildingType == EntityType.House ? _housePlaces : _rangedBasePlaces;
+            int take = buildingType == EntityType.House && currentTick < 300 ? places.Length - 4 : places.Length;
 
-            foreach (Vec2Int place in places)
+            foreach (Vec2Int place in places.Take(take))
             {
                 bool isFree = true;
 
