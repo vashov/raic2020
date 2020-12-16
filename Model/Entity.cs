@@ -40,7 +40,7 @@ namespace Aicup2020.Model
             }
         }
 
-        public bool RepairAllowed => IsHouse || IsTurret || IsBuilderBase || IsRangedBase || IsMeleeBase;
+        public bool RepairAllowed => IsHouse || IsTurret || IsBuilderBase || IsRangedBase;
 
         public int RepairPriority
         {
